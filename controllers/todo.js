@@ -1,8 +1,18 @@
 const Todo = require('../models/Todo');
+const SubTodo = require('../models/SubTodo');
 
 exports.getTodos = async (req, res, next) => {
   try {
-    const todos = await Todo.find().sort('-createdAt').populate('userId');
+    const todos = await Todo.find()
+      .lean()
+      .sort('-createdAt')
+      .populate('userId');
+
+    for (let todo of todos) {
+      let result = await SubTodo.find({ todoId: todo._id });
+
+      todo.subTodos = result;
+    }
 
     if (!todos) {
       return res.json({
@@ -26,8 +36,15 @@ exports.getTodosByUserId = async (req, res, next) => {
   try {
     const { userId } = req.query;
     const todos = await Todo.find({ userId })
+      .lean()
       .sort('-createdAt')
       .populate('userId');
+
+    for (let todo of todos) {
+      let result = await SubTodo.find({ todoId: todo._id });
+
+      todo.subTodos = result;
+    }
 
     if (!todos) {
       return res.json({
@@ -80,7 +97,10 @@ exports.getTodo = async (req, res, next) => {
   try {
     const { id } = req.params;
     const todo = await Todo.findById(id).populate('userId');
-    console.log(todo, 'todo');
+    const subTodos = await SubTodo.find({ todoId: id })
+      .sort('-createdAt')
+      .populate('todoId');
+
     if (!todo) {
       return res.json({
         success: false,
@@ -91,6 +111,7 @@ exports.getTodo = async (req, res, next) => {
     res.json({
       success: true,
       todo,
+      subTodos,
     });
   } catch (error) {
     console.log(error);
@@ -103,10 +124,9 @@ exports.getTodo = async (req, res, next) => {
 };
 
 exports.updateTodo = async (req, res, next) => {
-  const { id } = req.params,
-    updTodo = req.body;
-
   try {
+    const { id } = req.params,
+      updTodo = req.body;
     const todo = await Todo.findByIdAndUpdate(id, updTodo, {
       new: true,
       useFindAndModify: false,
@@ -131,10 +151,14 @@ exports.updateTodo = async (req, res, next) => {
 };
 
 exports.deleteTodo = async (req, res, next) => {
-  const { id } = req.params;
-
   try {
+    const { id } = req.params;
     const todo = await Todo.findByIdAndDelete(id);
+    const subTodos = await SubTodo.find({ todoId: id });
+
+    subTodos.forEach(async (subTodo) => {
+      await SubTodo.findByIdAndDelete(subTodo._id);
+    });
 
     if (!todo) {
       return res.json({

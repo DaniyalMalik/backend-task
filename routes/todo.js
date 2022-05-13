@@ -13,8 +13,8 @@ const express = require('express'),
 router.post('/', protect, addTodo);
 router.delete('/:id', protect, deleteTodo);
 router.put('/:id', protect, updateTodo);
-router.get('/:id', protect, getTodo);
 router.get('/', protect, getTodos);
-router.get('/', protect, getTodosByUserId);
+router.get('/byuserid', protect, getTodosByUserId);
+router.get('/:id', protect, getTodo);
 
 module.exports = router;

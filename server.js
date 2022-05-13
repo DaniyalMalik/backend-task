@@ -10,7 +10,8 @@ const express = require('express'),
   hpp = require('hpp'),
   mongoSanitize = require('express-mongo-sanitize'),
   userRoutes = require('./routes/user'),
-  todoRoutes = require('./routes/todo');
+  todoRoutes = require('./routes/todo'),
+  subTodoRoutes = require('./routes/subTodo');
 
 dotenv.config({ path: 'config/.env' });
 
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use('/api/user', userRoutes);
 app.use('/api/todo', todoRoutes);
+app.use('/api/subtodo', subTodoRoutes);
 
 app.listen(process.env.PORT || 5000, () =>
   console.log(

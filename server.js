@@ -9,8 +9,7 @@ const express = require('express'),
   helmet = require('helmet'),
   hpp = require('hpp'),
   mongoSanitize = require('express-mongo-sanitize'),
-  PORT = process.env.PORT || 5000,
-  ENVIRONMENT = process.env.NODE_ENV;
+  userRoutes = require('./routes/user');
 
 dotenv.config({ path: 'config/.env' });
 
@@ -22,10 +21,13 @@ app.use(xss());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+app.use('/api/user', userRoutes);
 
-app.listen(PORT, () =>
+app.listen(process.env.PORT || 5000, () =>
   console.log(
-    `Server started running in ${ENVIRONMENT} mode on PORT ${PORT}`.blue.bold,
+    `Server started running in ${process.env.NODE_ENV} mode on PORT ${
+      process.env.PORT || 5000
+    }`.blue.bold,
   ),
 );
 

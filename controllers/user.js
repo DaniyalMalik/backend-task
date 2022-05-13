@@ -1,4 +1,5 @@
-const User = require('../models/User');
+const User = require('../models/User'),
+  bcrypt = require('bcryptjs');
 
 exports.register = async (req, res, next) => {
   try {
@@ -34,8 +35,8 @@ exports.register = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email }).select('+password');
-  console.log(user, 'user');
+  let user = await User.findOne({ email }).select('+password');
+
   if (!user) {
     return res.json({ success: false, message: 'Invalid Credentials!' });
   }
@@ -45,6 +46,8 @@ exports.login = async (req, res, next) => {
   if (!isSame) {
     return res.json({ success: false, message: 'Invalid Credentials!' });
   }
+
+  user = await User.findOne({ email });
 
   sendTokenResponse(user, res, 'User Logged In!');
 };
@@ -61,10 +64,10 @@ exports.getMe = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const id = req.userId,
-      updUser = req.body,
-      oldUser = await User.findById(id).select('password'),
-      isSame = await user.matchPassword(updUser.oldPassword);
-    console.log(oldUser, 'oldUser');
+      updUser = req.body;
+    let user = await User.findById(id).select('password');
+    const isSame = await user.matchPassword(updUser.oldPassword);
+
     if (!isSame)
       return res.json({
         success: false,
@@ -74,18 +77,19 @@ exports.changePassword = async (req, res, next) => {
     if (updUser.password !== updUser.passwordCheck)
       return res.json({ success: false, message: 'Passwords not matched!' });
 
-    // const salt = await bcrypt.genSalt();
-    // const passwordHash = await bcrypt.hash(updUser.password, salt);
-    const user = await User.findByIdAndUpdate(
+    const salt = await bcrypt.genSalt();
+    const passwordHash = await bcrypt.hash(updUser.password, salt);
+
+    user = await User.findByIdAndUpdate(
       id,
-      { password: updUser.password },
+      { password: passwordHash },
       {
         new: true,
         runValidators: true,
         useFindAndModify: false,
       },
     );
-    console.log(user, 'user');
+
     if (!user) {
       return res.json({
         success: false,
@@ -106,13 +110,16 @@ exports.changePassword = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const { id } = req.userId,
-      updUser = req.body,
-      user = await User.findByIdAndUpdate(id, updUser, {
-        new: true,
-        runValidators: true,
-        useFindAndModify: false,
-      });
+    const id = req.userId,
+      updUser = req.body;
+
+    delete updUser['password'];
+
+    const user = await User.findByIdAndUpdate(id, updUser, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
 
     if (!user) {
       return res.json({

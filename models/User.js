@@ -2,30 +2,31 @@ const mongoose = require('mongoose'),
   bcrypt = require('bcryptjs'),
   jwt = require('jsonwebtoken');
 
-const MongooseSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please enter a name!'],
+const MongooseSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please enter a name!'],
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: [true, 'Please enter an email address!'],
+      match: [
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        'Please enter a valid email address',
+      ],
+    },
+    password: {
+      type: String,
+      required: [true, 'Please enter a password'],
+      select: false,
+    },
   },
-  email: {
-    type: String,
-    unique: true,
-    required: [true, 'Please enter an email address!'],
-    match: [
-      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-      'Please enter a valid email address',
-    ],
+  {
+    timestamps: true,
   },
-  password: {
-    type: String,
-    required: [true, 'Please enter a password'],
-    select: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+);
 
 MongooseSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {

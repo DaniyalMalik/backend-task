@@ -9,7 +9,8 @@ const express = require('express'),
   helmet = require('helmet'),
   hpp = require('hpp'),
   mongoSanitize = require('express-mongo-sanitize'),
-  userRoutes = require('./routes/user');
+  userRoutes = require('./routes/user'),
+  todoRoutes = require('./routes/todo');
 
 dotenv.config({ path: 'config/.env' });
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use('/api/user', userRoutes);
+app.use('/api/todo', todoRoutes);
 
 app.listen(process.env.PORT || 5000, () =>
   console.log(
